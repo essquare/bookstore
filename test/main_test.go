@@ -15,9 +15,12 @@
 package test
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,6 +42,90 @@ var store *storage.Storage
 var db *sql.DB
 var r *mux.Router
 
+const (
+	contentJSON         = "application/json"
+	contentXML          = "application/xml"
+	contentAlternateXML = "text/xml"
+)
+
+type requestStruct struct {
+	user        map[string]interface{}
+	url         string
+	method      string
+	payload     map[string]interface{}
+	contentType string
+	accept      string
+	xmlRoot     string
+}
+
+func NewRequest(user map[string]interface{}, url string, method string, payload map[string]interface{}, xmlRoot string, contentType string, accept string) *requestStruct {
+	return &requestStruct{user: user, url: url, method: method, payload: payload, xmlRoot: xmlRoot, contentType: contentType, accept: accept}
+}
+func (r *requestStruct) createXMLString() string {
+	str := fmt.Sprintf("<%s>", r.xmlRoot)
+	for key, value := range r.payload {
+		str += fmt.Sprintf("<%s>%v</%s>", key, value, key)
+	}
+	str += fmt.Sprintf("</%s>", r.xmlRoot)
+	return str
+}
+
+func (r *requestStruct) unmarshal(t *testing.T, response *httptest.ResponseRecorder, m interface{}) {
+	if len(response.Body.Bytes()) != 0 {
+		switch r.contentType {
+		case contentJSON:
+			err := json.Unmarshal(response.Body.Bytes(), &m)
+			if err != nil {
+				t.Fatalf("Problem unmarshaling request: %v\n", err)
+			}
+		case contentXML, contentAlternateXML:
+			err := xml.Unmarshal(response.Body.Bytes(), &m)
+			if err != nil {
+				t.Fatalf("Problem unmarshaling request: %v\n", err)
+			}
+		default:
+			err := json.Unmarshal(response.Body.Bytes(), &m)
+			if err != nil {
+				t.Fatalf("Problem unmarshaling request: %v\n", err)
+			}
+		}
+	}
+	m = nil
+}
+func (r *requestStruct) makeRequest(t *testing.T) *httptest.ResponseRecorder {
+	token := getUserJWT(t, r.user)
+
+	var body io.Reader
+	if r.payload != nil {
+		switch r.contentType {
+		case contentJSON:
+			str, err := json.Marshal(r.payload)
+			if err != nil {
+				t.Fatalf("Problem marshaling request: %v\n", err)
+			}
+			body = bytes.NewBuffer([]byte(str))
+		case contentXML, contentAlternateXML:
+			str := r.createXMLString()
+			body = bytes.NewBuffer([]byte(str))
+		default:
+			// in order to test some edge cases just default to json
+			str, err := json.Marshal(r.payload)
+			if err != nil {
+				t.Fatalf("Problem marshaling request: %v\n", err)
+			}
+			body = bytes.NewBuffer([]byte(str))
+		}
+	}
+	request, err := http.NewRequest(r.method, r.url, body)
+	if err != nil {
+		t.Fatalf("Problem creating request: %v\n", err)
+	}
+	request.Header.Set("Content-Type", r.contentType)
+	request.Header.Set("Accept", r.accept)
+	request = addBearerToken(request, token)
+	return executeRequest(request)
+
+}
 func TestMain(m *testing.M) {
 
 	tmpfile, err := ioutil.TempFile("", "testdatabase.*.sqlite")
@@ -74,28 +161,27 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func resetDatabase() error {
+func resetDatabase(t *testing.T) {
 
 	_, err := db.Exec("DELETE FROM books")
 	if err != nil {
-		return err
+		t.Fatalf("Problem cleaning the database: %v\n", err)
 	}
 	_, err = db.Exec("DELETE FROM sqlite_sequence WHERE `name` = 'books'")
 	if err != nil {
-		return err
+		t.Fatalf("Problem cleaning the database: %v\n", err)
 	}
 	_, err = db.Exec("DELETE FROM users")
 	if err != nil {
-		return err
+		t.Fatalf("Problem cleaning the database: %v\n", err)
 	}
 	_, err = db.Exec("DELETE FROM sqlite_sequence WHERE `name` = 'users'")
 	if err != nil {
-		return err
+		t.Fatalf("Problem cleaning the database: %v\n", err)
 	}
-	return nil
 }
 
-func createDefaultAdmin() (*model.User, error) {
+func createDefaultAdmin(t *testing.T) map[string]interface{} {
 	user, err := store.CreateUser(&model.UserCreationRequest{
 		Username:  "admin",
 		Password:  "test123",
@@ -103,34 +189,42 @@ func createDefaultAdmin() (*model.User, error) {
 		IsAdmin:   true,
 	})
 	if err != nil {
-		return nil, err
+		t.Fatalf("Problem creating the admin user: %v\n", err)
 	}
-	user.Password = "test123"
-	return user, nil
+
+	var m map[string]interface{}
+	jsonUser, err := json.Marshal(user)
+	if err != nil {
+		t.Fatalf("Problem creating the admin user: %v\n", err)
+	}
+	json.Unmarshal(jsonUser, &m)
+	m["password"] = "test123"
+	m["id"] = int64(m["id"].(float64))
+	return m
 }
 
-func getUserJWT(user *model.User) (string, error) {
+func getUserJWT(t *testing.T, user map[string]interface{}) string {
 	data := url.Values{}
-	data.Set("username", user.Username)
-	data.Set("password", user.Password)
+	data.Set("username", user["username"].(string))
+	data.Set("password", user["password"].(string))
 
 	request, err := http.NewRequest(http.MethodPost, "/authenticate", strings.NewReader(data.Encode())) // URL-encoded payload
 	if err != nil {
-		return "", err
+		t.Fatalf("Problem getting jwt token for admin: %v\n", err)
 	}
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	request.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	response := executeRequest(request)
-	if response.Code == http.StatusOK {
-
-		var m map[string]string
-		json.Unmarshal(response.Body.Bytes(), &m)
-		if m["token"] != "" {
-			return m["token"], nil
-		}
-		return "", fmt.Errorf("Expected token: empty string received")
+	if response.Code != http.StatusOK {
+		t.Fatalf("Expected 200: %d received", response.Code)
 	}
-	return "", fmt.Errorf("Expected 200: %d received", response.Code)
+	var m map[string]string
+	json.Unmarshal(response.Body.Bytes(), &m)
+	if m["token"] == "" {
+		t.Fatalf("Expected token: empty string received")
+	}
+
+	return m["token"]
 }
 
 func addBearerToken(request *http.Request, token string) *http.Request {
@@ -146,31 +240,23 @@ func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 
 func checkResponseCode(t *testing.T, actual, expected int) {
 	if expected != actual {
-		t.Errorf("Expected response code %d. Got %d\n", expected, actual)
+		t.Fatalf("Expected response code %d. Got %d\n", expected, actual)
 	}
 }
 
-func checkUser(t *testing.T, user *model.User, userResponse *model.User) {
-	if userResponse.Username != user.Username {
-		t.Errorf("Expected username %s. Got %s\n", user.Username, userResponse.Username)
+func checkUser(t *testing.T, user map[string]interface{}, userResponse *model.User) {
+	if userResponse.Username != user["username"].(string) {
+		t.Fatalf("Expected username %s. Got %s\n", user["username"].(string), userResponse.Username)
 	}
-	if userResponse.Pseudonym != user.Pseudonym {
-		t.Errorf("Expected pseudonym %s. Got %s\n", user.Pseudonym, userResponse.Pseudonym)
-	}
-
-	if userResponse.IsAdmin != user.IsAdmin {
-		t.Errorf("Expected is_admin %t. Got %t\n", user.IsAdmin, userResponse.IsAdmin)
+	if userResponse.Pseudonym != user["pseudonym"].(string) {
+		t.Fatalf("Expected pseudonym %s. Got %s\n", user["pseudonym"].(string), userResponse.Pseudonym)
 	}
 
-	if userResponse.ID != user.ID {
-		t.Errorf("Expected id %d. Got %d\n", user.ID, userResponse.ID)
+	if userResponse.IsAdmin != user["is_admin"].(bool) {
+		t.Fatalf("Expected is_admin %t. Got %t\n", user["is_admin"].(bool), userResponse.IsAdmin)
 	}
-}
 
-func createJSONString(user *model.User) string {
-	return fmt.Sprintf(`{"username":"%s", "pseudonym": "%s", "password": "%s", "is_admin": %t}`, user.Username, user.Pseudonym, user.Password, user.IsAdmin)
-}
-
-func createXMLString(user *model.User) string {
-	return fmt.Sprintf(`<User><username>%s</username><pseudonym>%s</pseudonym><password>%s</password><is_admin>%t</is_admin></User>`, user.Username, user.Pseudonym, user.Password, user.IsAdmin)
+	if userResponse.ID != user["id"].(int64) {
+		t.Fatalf("Expected id %d. Got %d\n", user["id"].(int64), userResponse.ID)
+	}
 }

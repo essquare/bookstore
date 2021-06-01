@@ -15,250 +15,109 @@
 package test
 
 import (
-	"bytes"
-	"encoding/json"
-	"encoding/xml"
 	"fmt"
-	"log"
 	"net/http"
 	"testing"
 
 	"bookstore.app/model"
 )
 
+func createUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
+	var m model.User
+	r := NewRequest(caller, fmt.Sprintf("/users"), http.MethodPost, *user, "User", contentType, contentType)
+	response := r.makeRequest(t)
+
+	checkResponseCode(t, response.Code, http.StatusCreated)
+
+	r.unmarshal(t, response, &m)
+	(*user)["id"] = m.ID
+	checkUser(t, *user, &m)
+
+	getUser(t, caller, user, contentType)
+
+}
+
+func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, change map[string]interface{}, contentType string) {
+	var m model.User
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodPut, change, "User", contentType, contentType)
+	response := r.makeRequest(t)
+	checkResponseCode(t, response.Code, http.StatusOK)
+
+	r.unmarshal(t, response, &m)
+
+	for key, value := range change {
+		(*user)[key] = value
+	}
+
+	checkUser(t, *user, &m)
+
+	getUser(t, caller, user, contentType)
+
+}
+
+func deleteUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodDelete, nil, "User", contentType, contentType)
+	response := r.makeRequest(t)
+	checkResponseCode(t, response.Code, http.StatusNoContent)
+
+	getNonExistentUser(t, caller, user, contentType)
+}
+
+func getNonExistentUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "User", contentType, contentType)
+	response := r.makeRequest(t)
+	checkResponseCode(t, response.Code, http.StatusNotFound)
+}
+
+func getUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
+	var m model.User
+
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "User", contentType, contentType)
+	response := r.makeRequest(t)
+	checkResponseCode(t, response.Code, http.StatusOK)
+
+	r.unmarshal(t, response, &m)
+
+	checkUser(t, *user, &m)
+}
+func TestGeneralUserOperations(t *testing.T) {
+	resetDatabase(t)
+	admin := createDefaultAdmin(t)
+
+	contentTypes := []string{contentXML, contentJSON, contentAlternateXML}
+
+	for _, contentType := range contentTypes {
+
+		user := map[string]interface{}{
+			"username":  "testuser123",
+			"pseudonym": "Jack London",
+			"password":  "test123",
+			"is_admin":  false,
+		}
+
+		createUser(t, admin, &user, contentType)
+
+		change := map[string]interface{}{
+			"pseudonym": "Jack Kerouac",
+		}
+
+		updateUser(t, admin, &user, change, contentType)
+
+		deleteUser(t, admin, &user, contentType)
+
+		createUser(t, admin, &user, contentType)
+
+		deleteUser(t, admin, &user, contentType)
+	}
+}
+
 func TestGetAdminUser(t *testing.T) {
-	err := resetDatabase()
-	if err != nil {
-		log.Fatalf("Problem cleaning the database: %v\n", err)
+	resetDatabase(t)
+	admin := createDefaultAdmin(t)
+
+	contentTypes := []string{contentXML, contentJSON, contentAlternateXML}
+
+	for _, contentType := range contentTypes {
+		getUser(t, admin, &admin, contentType)
 	}
-
-	admin, err := createDefaultAdmin()
-	if err != nil {
-		log.Fatalf("Problem creating the admin user: %v\n", err)
-	}
-	token, err := getUserJWT(admin)
-	if err != nil {
-		t.Errorf("Problem getting jwt token for admin: %v\n", err)
-	}
-
-	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", admin.ID), nil)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response := executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	var m model.User
-	json.Unmarshal(response.Body.Bytes(), &m)
-
-	checkUser(t, admin, &m)
-
-}
-
-func TestGetAdminUserXML(t *testing.T) {
-	err := resetDatabase()
-	if err != nil {
-		log.Fatalf("Problem cleaning the database: %v\n", err)
-	}
-
-	admin, err := createDefaultAdmin()
-	if err != nil {
-		log.Fatalf("Problem creating the admin user: %v\n", err)
-	}
-	token, err := getUserJWT(admin)
-	if err != nil {
-		t.Errorf("Problem getting jwt token for admin: %v\n", err)
-	}
-
-	request, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", admin.ID), nil)
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response := executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	var m model.User
-	xml.Unmarshal(response.Body.Bytes(), &m)
-
-	checkUser(t, admin, &m)
-
-}
-func TestUserOperations(t *testing.T) {
-	err := resetDatabase()
-	if err != nil {
-		log.Fatalf("Problem cleaning the database: %v\n", err)
-	}
-
-	admin, err := createDefaultAdmin()
-	if err != nil {
-		log.Fatalf("Problem creating the admin user: %v\n", err)
-	}
-	token, err := getUserJWT(admin)
-	if err != nil {
-		t.Errorf("Problem getting jwt token for admin: %v\n", err)
-	}
-
-	user := &model.User{
-		Username:  "testuser123",
-		Pseudonym: "Jack London",
-		Password:  "test123",
-		IsAdmin:   false,
-	}
-	jsonStr := createJSONString(user)
-	request, err := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer([]byte(jsonStr)))
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response := executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusCreated)
-
-	var m model.User
-	json.Unmarshal(response.Body.Bytes(), &m)
-	user.ID = m.ID
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodPut, fmt.Sprintf("/users/%d", user.ID), bytes.NewBuffer([]byte(`{"pseudonym":"Jack Kerouac"}`)))
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	json.Unmarshal(response.Body.Bytes(), &m)
-	user.Pseudonym = "Jack Kerouac"
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	json.Unmarshal(response.Body.Bytes(), &m)
-
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusNoContent)
-
-	request, err = http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Accept", "application/json")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusNotFound)
-
-}
-
-func TestUserOperationsXML(t *testing.T) {
-	err := resetDatabase()
-	if err != nil {
-		log.Fatalf("Problem cleaning the database: %v\n", err)
-	}
-
-	admin, err := createDefaultAdmin()
-	if err != nil {
-		log.Fatalf("Problem creating the admin user: %v\n", err)
-	}
-	token, err := getUserJWT(admin)
-	if err != nil {
-		t.Errorf("Problem getting jwt token for admin: %v\n", err)
-	}
-
-	user := &model.User{
-		Username:  "testuser123",
-		Pseudonym: "Jack London",
-		Password:  "test123",
-		IsAdmin:   false,
-	}
-	xmlStr := createXMLString(user)
-	request, err := http.NewRequest(http.MethodPost, "/users", bytes.NewBuffer([]byte(xmlStr)))
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response := executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusCreated)
-
-	var m model.User
-	xml.Unmarshal(response.Body.Bytes(), &m)
-	user.ID = m.ID
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodPut, fmt.Sprintf("/users/%d", user.ID), bytes.NewBuffer([]byte(`<User><pseudonym>Jack Kerouac</pseudonym></User>`)))
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	xml.Unmarshal(response.Body.Bytes(), &m)
-	user.Pseudonym = "Jack Kerouac"
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusOK)
-
-	xml.Unmarshal(response.Body.Bytes(), &m)
-
-	checkUser(t, user, &m)
-
-	request, err = http.NewRequest(http.MethodDelete, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusNoContent)
-
-	request, err = http.NewRequest(http.MethodGet, fmt.Sprintf("/users/%d", user.ID), nil)
-	request.Header.Set("Content-Type", "application/xml")
-	request.Header.Set("Accept", "application/xml")
-	if err != nil {
-		t.Errorf("Problem creating request: %v\n", err)
-	}
-	request = addBearerToken(request, token)
-	response = executeRequest(request)
-	checkResponseCode(t, response.Code, http.StatusNotFound)
-
 }
