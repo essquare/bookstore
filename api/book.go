@@ -268,5 +268,5 @@ func (h *handler) deleteUserBook(w http.ResponseWriter, r *http.Request) {
 		renderResult(w, r, http.StatusInternalServerError, strToObjectError("Server Error"))
 		return
 	}
-	renderResult(w, r, http.StatusOK, book)
+	renderResult(w, r, http.StatusNoContent, book)
 }

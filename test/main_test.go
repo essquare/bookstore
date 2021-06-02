@@ -260,3 +260,28 @@ func checkUser(t *testing.T, user map[string]interface{}, userResponse *model.Us
 		t.Fatalf("Expected id %d. Got %d\n", user["id"].(int64), userResponse.ID)
 	}
 }
+
+func checkBook(t *testing.T, book map[string]interface{}, bookResponse *model.Book) {
+	if bookResponse.Price != book["price"].(int64) {
+		t.Fatalf("Expected price %d. Got %d\n", book["price"].(int64), bookResponse.Price)
+	}
+	if bookResponse.Title != book["title"].(string) {
+		t.Fatalf("Expected title %s. Got %s\n", book["title"].(string), bookResponse.Title)
+	}
+
+	if bookResponse.Description != book["description"].(string) {
+		t.Fatalf("Expected description %s. Got %s\n", book["description"].(string), bookResponse.Description)
+	}
+
+	if bookResponse.ImageURL != book["image_url"].(string) {
+		t.Fatalf("Expected image_url %s. Got %s\n", book["image_url"].(string), bookResponse.ImageURL)
+	}
+
+	if bookResponse.UserID != book["user_id"].(int64) {
+		t.Fatalf("Expected user_id %d. Got %d\n", book["user_id"].(int64), bookResponse.UserID)
+	}
+
+	if bookResponse.ID != book["id"].(int64) {
+		t.Fatalf("Expected id %d. Got %d\n", book["id"].(int64), bookResponse.ID)
+	}
+}
