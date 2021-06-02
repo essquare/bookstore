@@ -35,19 +35,26 @@ func Serve(router *mux.Router, store *storage.Storage) {
 	handler := &handler{store}
 
 	middleware := newMiddleware(store)
+
 	router.Use(middleware.handleMediaTypes)
+
+	usersRoute := router.PathPrefix("/users").Subrouter()
+	booksRoute := router.PathPrefix("/books").Subrouter()
+
+	usersRoute.Use(middleware.handleToken)
+
 	router.HandleFunc("/authenticate", handler.authenticate).Methods(http.MethodPost).Name("Authenticate")
-	router.Handle("/users", middleware.handleToken(http.HandlerFunc(handler.listUsers))).Methods(http.MethodGet).Name("ListUsers")
-	router.Handle("/users", middleware.handleToken(http.HandlerFunc(handler.createUser))).Methods(http.MethodPost).Name("CreateUser")
-	router.Handle("/users/{userID:[0-9]+}", middleware.handleToken(http.HandlerFunc(handler.updateUser))).Methods(http.MethodPut).Name("UpdateUser")
-	router.Handle("/users/{userID:[0-9]+}", middleware.handleToken(http.HandlerFunc(handler.deleteUser))).Methods(http.MethodDelete).Name("DeleteUser")
-	router.Handle("/users/{userID:[0-9]+}", middleware.handleToken(http.HandlerFunc(handler.getUser))).Methods(http.MethodGet).Name("GetUser")
+	usersRoute.HandleFunc("", handler.listUsers).Methods(http.MethodGet).Name("ListUsers")
+	usersRoute.HandleFunc("", handler.createUser).Methods(http.MethodPost).Name("CreateUser")
+	usersRoute.HandleFunc("/{userID:[0-9]+}", handler.updateUser).Methods(http.MethodPut).Name("UpdateUser")
+	usersRoute.HandleFunc("/{userID:[0-9]+}", handler.deleteUser).Methods(http.MethodDelete).Name("DeleteUser")
+	usersRoute.HandleFunc("/{userID:[0-9]+}", handler.getUser).Methods(http.MethodGet).Name("GetUser")
 
-	router.Handle("/users/{userID:[0-9]+}/books", middleware.handleToken(http.HandlerFunc(handler.listUserBooks))).Methods(http.MethodGet).Name("ListUserBooks")
-	router.Handle("/users/{userID:[0-9]+}/books", middleware.handleToken(http.HandlerFunc(handler.createUserBook))).Methods(http.MethodPost).Name("CreateUserBook")
-	router.Handle("/users/{userID:[0-9]+}/books/{bookID:[0-9]+}", middleware.handleToken(http.HandlerFunc(handler.updateUserBook))).Methods(http.MethodPut).Name("UpdateUserBook")
-	router.Handle("/users/{userID:[0-9]+}/books/{bookID:[0-9]+}", middleware.handleToken(http.HandlerFunc(handler.deleteUserBook))).Methods(http.MethodDelete).Name("DeleteUserBook")
+	usersRoute.HandleFunc("/{userID:[0-9]+}/books", handler.listUserBooks).Methods(http.MethodGet).Name("ListUserBooks")
+	usersRoute.HandleFunc("/{userID:[0-9]+}/books", handler.createUserBook).Methods(http.MethodPost).Name("CreateUserBook")
+	usersRoute.HandleFunc("/{userID:[0-9]+}/books/{bookID:[0-9]+}", handler.updateUserBook).Methods(http.MethodPut).Name("UpdateUserBook")
+	usersRoute.HandleFunc("/{userID:[0-9]+}/books/{bookID:[0-9]+}", handler.deleteUserBook).Methods(http.MethodDelete).Name("DeleteUserBook")
 
-	// router.HandleFunc("/books" handler.books).Methods("GET")
-	router.Handle("/books/{bookID:[0-9]+}", http.HandlerFunc(handler.getBook)).Methods(http.MethodGet).Name("GetBook")
+	booksRoute.HandleFunc("", handler.listBooks).Methods(http.MethodGet).Name("ListBooks")
+	booksRoute.HandleFunc("/{bookID:[0-9]+}", handler.getBook).Methods(http.MethodGet).Name("GetBook")
 }

@@ -50,7 +50,7 @@ func ValidateBookModification(store *storage.Storage, userID int64, bookID int64
 		if *changes.Title == "" {
 			return NewValidationError("book_mandatory_fields:title")
 		} else if store.BookWithSameTitle(userID, bookID, *changes.Title) {
-			return NewValidationError("invalid_book_fields:title")
+			return NewValidationError("book_already_exists")
 		}
 	}
 
@@ -60,6 +60,33 @@ func ValidateBookModification(store *storage.Storage, userID int64, bookID int64
 		}
 	}
 
+	return nil
+}
+
+func ValidateBookListing(r model.BookListingRequest) error {
+	if r.AutorID != nil && *r.AutorID <= 0 {
+		return NewValidationError("invalid_search_fields:author-id")
+	}
+	if r.Description != nil && *r.Description == "" {
+		return NewValidationError("invalid_search_fields:description")
+	}
+	if r.Title != nil && *r.Title == "" {
+		return NewValidationError("invalid_search_fields:title")
+	}
+
+	if r.MinPrice != nil && *r.MinPrice <= 0 {
+		return NewValidationError("invalid_search_fields:min-price")
+	}
+
+	if r.MaxPrice != nil && *r.MaxPrice <= 0 {
+		return NewValidationError("invalid_search_fields:min-price")
+	}
+
+	if r.MinPrice != nil && r.MaxPrice != nil {
+		if *r.MinPrice > *r.MaxPrice {
+			return NewValidationError("invalid_search_fields:min-price,max-price")
+		}
+	}
 
 	return nil
 }

@@ -22,11 +22,11 @@ import (
 // ValidateUserCreationWithPassword validates user creation with a password.
 func ValidateUserCreation(store *storage.Storage, request *model.UserCreationRequest) error {
 	if request.Username == "" {
-		return NewValidationError("user_mandatory_fields")
+		return NewValidationError("user_mandatory_fields:username")
 	}
 
 	if request.Pseudonym == "" {
-		return NewValidationError("user_mandatory_fields")
+		return NewValidationError("user_mandatory_fields:pseudonym")
 	}
 
 	if store.UserExists(request.Username) {
@@ -44,9 +44,9 @@ func ValidateUserCreation(store *storage.Storage, request *model.UserCreationReq
 func ValidateUserModification(store *storage.Storage, userID int64, changes *model.UserModificationRequest) error {
 	if changes.Username != nil {
 		if *changes.Username == "" {
-			return NewValidationError("error.user_mandatory_fields")
+			return NewValidationError("user_mandatory_fields:username")
 		} else if store.AnotherUserExists(userID, *changes.Username) {
-			return NewValidationError("error.user_already_exists")
+			return NewValidationError("user_already_exists")
 		}
 	}
 

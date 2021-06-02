@@ -81,6 +81,42 @@ func (b *BookQueryBuilder) WithBookID(bookID int64) *BookQueryBuilder {
 	return b
 }
 
+// WithMinPrice filter by minimum price.
+func (b *BookQueryBuilder) WithMinPrice(price int64) *BookQueryBuilder {
+	if price >= 0 {
+		b.conditions = append(b.conditions, fmt.Sprintf("b.price >= $%d", len(b.args)+1))
+		b.args = append(b.args, price)
+	}
+	return b
+}
+
+// WithMaxPrice filter by maximum price.
+func (b *BookQueryBuilder) WithMaxPrice(price int64) *BookQueryBuilder {
+	if price >= 0 {
+		b.conditions = append(b.conditions, fmt.Sprintf("b.price <= $%d", len(b.args)+1))
+		b.args = append(b.args, price)
+	}
+	return b
+}
+
+// SearchTitle filter by title.
+func (b *BookQueryBuilder) SearchTitle(title string) *BookQueryBuilder {
+	if title != "" {
+		b.conditions = append(b.conditions, fmt.Sprintf("b.title like $%d", len(b.args)+1))
+		b.args = append(b.args, "%"+title+"%")
+	}
+	return b
+}
+
+// SearchDescription filter by description.
+func (b *BookQueryBuilder) SearchDescription(description string) *BookQueryBuilder {
+	if description != "" {
+		b.conditions = append(b.conditions, fmt.Sprintf("b.description like $%d", len(b.args)+1))
+		b.args = append(b.args, "%"+description+"%")
+	}
+	return b
+}
+
 // WithOffset set the offset.
 func (b *BookQueryBuilder) WithOffset(offset int) *BookQueryBuilder {
 	if offset > 0 {
@@ -90,6 +126,9 @@ func (b *BookQueryBuilder) WithOffset(offset int) *BookQueryBuilder {
 }
 
 func (b *BookQueryBuilder) buildCondition() string {
+	if len(b.conditions) == 0 {
+		return "1"
+	}
 	return strings.Join(b.conditions, " AND ")
 }
 
@@ -197,6 +236,30 @@ func (s *Storage) Books() (*model.Books, error) {
 	builder := NewBookQueryBuilder(s)
 	builder.WithOrder(model.DefaultBookSorting)
 	builder.WithDirection(model.DefaultBookSortingDirection)
+	return builder.GetBooks()
+}
+
+// Search Books search books.
+func (s *Storage) SearchBooks(search model.BookListingRequest) (*model.Books, error) {
+	builder := NewBookQueryBuilder(s)
+	builder.WithOrder(model.DefaultBookSorting)
+	builder.WithDirection(model.DefaultBookSortingDirection)
+	if search.AutorID != nil {
+		builder.WithUserID(*search.AutorID)
+	}
+	if search.Title != nil {
+		builder.SearchTitle(*search.Title)
+	}
+	if search.Description != nil {
+		builder.SearchDescription(*search.Description)
+	}
+	if search.MinPrice != nil {
+		builder.WithMinPrice(*search.MinPrice)
+	}
+	if search.MaxPrice != nil {
+		builder.WithMaxPrice(*search.MaxPrice)
+	}
+
 	return builder.GetBooks()
 }
 

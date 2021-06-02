@@ -22,6 +22,62 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func (h *handler) listBooks(w http.ResponseWriter, r *http.Request) {
+	authorID, err := queryInt64Param(r, "author-id")
+	if err != nil {
+		log.Errorf("[ListBooks] Error reading query parameter: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	minPrice, err := queryInt64Param(r, "min-price")
+	if err != nil {
+		log.Errorf("[ListBooks] Error reading query parameter: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	maxPrice, err := queryInt64Param(r, "max-price")
+	if err != nil {
+		log.Errorf("[ListBooks] Error reading query parameter: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	title, err := queryStringParam(r, "title")
+	if err != nil {
+		log.Errorf("[ListBooks] Error reading query parameter: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	description, err := queryStringParam(r, "description")
+	if err != nil {
+		log.Errorf("[ListBooks] Error reading query parameter: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	search := &model.BookListingRequest{Title: title, Description: description, AutorID: authorID, MinPrice: minPrice, MaxPrice: maxPrice}
+
+	err = validator.ValidateBookListing(*search)
+
+	if err != nil {
+		log.Errorf("[ListBooks] Validation Error: %v", err)
+		renderResult(w, r, http.StatusBadRequest, errToObjectError(err))
+		return
+	}
+
+	books, err := h.store.SearchBooks(*search)
+	if err != nil {
+		log.Errorf("[ListBooks] Error in loading the books from the database: %v", err)
+		renderResult(w, r, http.StatusInternalServerError, strToObjectError("Server Error"))
+		return
+	}
+
+	renderResult(w, r, http.StatusOK, books)
+}
+
 func (h *handler) getBook(w http.ResponseWriter, r *http.Request) {
 	bookID := routeInt64Param(r, "bookID")
 

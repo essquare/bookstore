@@ -87,3 +87,11 @@ func (b *BookModificationRequest) Patch(book *Book) {
 		book.ImageURL = *b.ImageURL
 	}
 }
+
+type BookListingRequest struct {
+	Title       *string
+	Description *string
+	MinPrice    *int64
+	MaxPrice    *int64
+	AutorID     *int64
+}

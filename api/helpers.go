@@ -96,7 +96,37 @@ func strToObjectError(err string) *errorMsg {
 	return &errorMsg{ErrorMessage: err}
 }
 
-// routeInt64Param returns an URL route parameter as int64.
+func queryInt64Param(r *http.Request, param string) (*int64, error) {
+	vars := r.URL.Query()
+	v, ok := vars[param]
+	if !ok {
+		return nil, nil
+	}
+	if len(v) > 1 {
+		return nil, fmt.Errorf("more than one query parameter: %s", param)
+	}
+	value, err := strconv.ParseInt(v[0], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	if value < 0 {
+		return nil, fmt.Errorf("number is negative")
+	}
+
+	return &value, nil
+}
+
+func queryStringParam(r *http.Request, param string) (*string, error) {
+	vars := r.URL.Query()
+	v, ok := vars[param]
+	if !ok {
+		return nil, nil
+	}
+
+	return &v[0], nil
+}
+
 func routeInt64Param(r *http.Request, param string) int64 {
 	vars := mux.Vars(r)
 	value, err := strconv.ParseInt(vars[param], 10, 64)
