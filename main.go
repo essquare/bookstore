@@ -62,8 +62,8 @@ func main() {
 
 	flag.BoolVar(&flagCreateAdmin, "create-admin", false, flagCreateAdminHelp)
 
-	flag.StringVar(&flagCreateAdminUsername, "create-admin-username", "", flagCreateAdminUsername)
-	flag.StringVar(&flagCreateAdminPassword, "create-admin-password", "", flagCreateAdminPassword)
+	flag.StringVar(&flagCreateAdminUsername, "create-admin-username", "", flagCreateAdminUserNameHelp)
+	flag.StringVar(&flagCreateAdminPassword, "create-admin-password", "", flagCreateAdminUserPasswordHelp)
 
 	flag.Parse()
 

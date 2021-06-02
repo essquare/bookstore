@@ -24,7 +24,7 @@ import (
 // ValidateBookCreation validates user creation with a password.
 func ValidateBookCreation(store *storage.Storage, userID int64, request *model.BookCreationRequest) error {
 	if request.Title == "" {
-		return NewValidationError("user_mandatory_fields")
+		return NewValidationError("book_mandatory_fields:title")
 	}
 
 	if store.BookForUserExists(userID, request.Title) {
@@ -33,9 +33,14 @@ func ValidateBookCreation(store *storage.Storage, userID int64, request *model.B
 	if request.ImageURL != "" {
 		_, err := url.ParseRequestURI(request.ImageURL)
 		if err != nil {
-			return NewValidationError("image_url_format_error")
+			return NewValidationError("invalid_book_fields:image_url")
 		}
 	}
+
+	if request.Price < 0 {
+		return NewValidationError("invalid_book_fields:price")
+	}
+
 	return nil
 }
 
@@ -43,11 +48,18 @@ func ValidateBookCreation(store *storage.Storage, userID int64, request *model.B
 func ValidateBookModification(store *storage.Storage, userID int64, bookID int64, changes *model.BookModificationRequest) error {
 	if changes.Title != nil {
 		if *changes.Title == "" {
-			return NewValidationError("error.book_mandatory_fields")
+			return NewValidationError("book_mandatory_fields:title")
 		} else if store.BookWithSameTitle(userID, bookID, *changes.Title) {
-			return NewValidationError("error.book_already_exists")
+			return NewValidationError("invalid_book_fields:title")
 		}
 	}
+
+	if changes.Price != nil {
+		if *changes.Price < 0 {
+			return NewValidationError("invalid_book_fields:price")
+		}
+	}
+
 
 	return nil
 }

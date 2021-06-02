@@ -16,3 +16,6 @@
 
 bookstore
 bookstore.sqlite
+bookstore.app
+
+.idea/

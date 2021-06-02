@@ -53,18 +53,20 @@ func (u Books) List() []interface{} {
 
 // UserCreationRequest represents the request to create a user.
 type BookCreationRequest struct {
-	Title       string `json:"title" xml:"title"`
-	Description string `json:"description" xml:"description"`
-	Price       int64  `json:"price" xml:"price"`
-	ImageURL    string `json:"image_url" xml:"image_url"`
+	XMLName     xml.Name `json:"-" xml:"Book"`
+	Title       string   `json:"title" xml:"title"`
+	Description string   `json:"description" xml:"description"`
+	Price       int64    `json:"price" xml:"price"`
+	ImageURL    string   `json:"image_url" xml:"image_url"`
 }
 
 // UserModificationRequest represents the request to modify a user.
 type BookModificationRequest struct {
-	Title       *string `json:"title" xml:"title"`
-	Description *string `json:"description" xml:"description"`
-	Price       *int64  `json:"price" xml:"price"`
-	ImageURL    *string `json:"image_url" xml:"image_url"`
+	XMLName     xml.Name `json:"-" xml:"Book"`
+	Title       *string  `json:"title" xml:"title"`
+	Description *string  `json:"description" xml:"description"`
+	Price       *int64   `json:"price" xml:"price"`
+	ImageURL    *string  `json:"image_url" xml:"image_url"`
 }
 
 // Patch updates the User object with the modification request.

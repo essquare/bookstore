@@ -48,18 +48,20 @@ func NewUsers(users []User) *Users {
 
 // UserCreationRequest represents the request to create a user.
 type UserCreationRequest struct {
-	Username  string `json:"username" xml:"username"`
-	Password  string `json:"password" xml:"password"`
-	Pseudonym string `json:"pseudonym" xml:"pseudonym"`
-	IsAdmin   bool   `json:"is_admin" xml:"is_admin"`
+	XMLName   xml.Name `json:"-" xml:"User"`
+	Username  string   `json:"username" xml:"username"`
+	Password  string   `json:"password" xml:"password"`
+	Pseudonym string   `json:"pseudonym" xml:"pseudonym"`
+	IsAdmin   bool     `json:"is_admin" xml:"is_admin"`
 }
 
 // UserModificationRequest represents the request to modify a user.
 type UserModificationRequest struct {
-	Username  *string `json:"username" xml:"username"`
-	Password  *string `json:"password" xml:"password"`
-	Pseudonym *string `json:"pseudonym" xml:"pseudonym"`
-	IsAdmin   *bool   `json:"is_admin" xml:"is_admin"`
+	XMLName   xml.Name `json:"-" xml:"User"`
+	Username  *string  `json:"username" xml:"username"`
+	Password  *string  `json:"password" xml:"password"`
+	Pseudonym *string  `json:"pseudonym" xml:"pseudonym"`
+	IsAdmin   *bool    `json:"is_admin" xml:"is_admin"`
 }
 
 // Patch updates the User object with the modification request.

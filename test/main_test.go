@@ -228,7 +228,7 @@ func getUserJWT(t *testing.T, user map[string]interface{}) string {
 }
 
 func addBearerToken(request *http.Request, token string) *http.Request {
-	request.Header.Add("Authorization", "Bearer "+token)
+	request.Header.Add("Authorization", "Bearer " + token)
 	return request
 }
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
