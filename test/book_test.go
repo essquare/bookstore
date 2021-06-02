@@ -1,4 +1,4 @@
-// Copyright 2021 gergan
+// Copyright 2021 essquare GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,19 +90,19 @@ func TestGeneralBookOperations(t *testing.T) {
 	for _, contentType := range contentTypes {
 
 		book := map[string]interface{}{
-			"title":  "The test book",
+			"title":       "The test book",
 			"description": "More details for testing",
-			"image_url":  "https://images.books/cover.jpg",
-			"user_id":  admin["id"],
-			"price":  int64(1995),
+			"image_url":   "https://images.books/cover.jpg",
+			"user_id":     admin["id"],
+			"price":       int64(1995),
 		}
 
 		createBook(t, admin, &book, contentType)
 
 		change := map[string]interface{}{
-			"title": "The final book",
+			"title":       "The final book",
 			"description": "Some more description for this book",
-			"price": int64(1499),
+			"price":       int64(1499),
 		}
 
 		updateBook(t, admin, &book, change, contentType)
