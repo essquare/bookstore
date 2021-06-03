@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"testing"
 
-	"bookstore.app/model"
+	"bookstore/model"
 )
 
 func createBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
@@ -34,7 +34,6 @@ func createBook(t *testing.T, caller map[string]interface{}, book *map[string]in
 	checkBook(t, *book, &m)
 
 	getBook(t, caller, book, contentType)
-
 }
 
 func updateBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, change map[string]interface{}, contentType string) {
@@ -52,7 +51,6 @@ func updateBook(t *testing.T, caller map[string]interface{}, book *map[string]in
 	checkBook(t, *book, &m)
 
 	getBook(t, caller, book, contentType)
-
 }
 
 func deleteBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
@@ -88,7 +86,6 @@ func TestGeneralBookOperations(t *testing.T) {
 	contentTypes := []string{contentXML, contentJSON, contentAlternateXML}
 
 	for _, contentType := range contentTypes {
-
 		book := map[string]interface{}{
 			"title":       "The test book",
 			"description": "More details for testing",

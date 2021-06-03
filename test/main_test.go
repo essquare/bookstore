@@ -31,10 +31,11 @@ import (
 	"strings"
 	"testing"
 
-	"bookstore.app/api"
-	"bookstore.app/database"
-	"bookstore.app/model"
-	"bookstore.app/storage"
+	"bookstore/api"
+	"bookstore/database"
+	"bookstore/model"
+	"bookstore/storage"
+
 	"github.com/gorilla/mux"
 )
 
@@ -124,10 +125,9 @@ func (r *requestStruct) makeRequest(t *testing.T) *httptest.ResponseRecorder {
 	request.Header.Set("Accept", r.accept)
 	request = addBearerToken(request, token)
 	return executeRequest(request)
-
 }
-func TestMain(m *testing.M) {
 
+func TestMain(m *testing.M) {
 	tmpfile, err := ioutil.TempFile("", "testdatabase.*.sqlite")
 	if err != nil {
 		log.Fatal(err)
@@ -162,7 +162,6 @@ func TestMain(m *testing.M) {
 }
 
 func resetDatabase(t *testing.T) {
-
 	_, err := db.Exec("DELETE FROM books")
 	if err != nil {
 		t.Fatalf("Problem cleaning the database: %v\n", err)
@@ -228,7 +227,7 @@ func getUserJWT(t *testing.T, user map[string]interface{}) string {
 }
 
 func addBearerToken(request *http.Request, token string) *http.Request {
-	request.Header.Add("Authorization", "Bearer " + token)
+	request.Header.Add("Authorization", "Bearer "+token)
 	return request
 }
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {

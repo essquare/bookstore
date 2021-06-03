@@ -19,7 +19,8 @@ import (
 	"fmt"
 	"strings"
 
-	"bookstore.app/model"
+	"bookstore/model"
+
 	"golang.org/x/crypto/bcrypt"
 )
 

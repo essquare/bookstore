@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"bookstore.app/storage"
+	"bookstore/storage"
 
 	"github.com/gorilla/mux"
 )
@@ -31,7 +31,6 @@ const tokenValidity = 15 * time.Minute
 
 // Serve declares API routes for the application.
 func Serve(router *mux.Router, store *storage.Storage) {
-
 	handler := &handler{store}
 
 	middleware := newMiddleware(store)

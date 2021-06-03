@@ -25,10 +25,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"bookstore.app/api"
-	"bookstore.app/database"
-	"bookstore.app/model"
-	"bookstore.app/storage"
+	"bookstore/api"
+	"bookstore/database"
+	"bookstore/model"
+	"bookstore/storage"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -43,7 +44,6 @@ const (
 )
 
 func main() {
-
 	var flagSQLiteFile string
 	var flagListenAddr string
 	var flagMigrateDB bool
@@ -103,7 +103,6 @@ func main() {
 		}
 		log.Infof("Admin user with ID: %d, created!", user.ID)
 		return
-
 	}
 	r := mux.NewRouter()
 

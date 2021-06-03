@@ -17,8 +17,9 @@ package api
 import (
 	"net/http"
 
-	"bookstore.app/model"
-	"bookstore.app/validator"
+	"bookstore/model"
+	"bookstore/validator"
+
 	log "github.com/sirupsen/logrus"
 )
 

@@ -19,7 +19,7 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"bookstore.app/auth"
+	"bookstore/auth"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -29,7 +29,6 @@ type tokenMsg struct {
 }
 
 func (h *handler) authenticate(w http.ResponseWriter, r *http.Request) {
-
 	if r.Method != http.MethodPost {
 		log.Error("[authenticate] Method not Post")
 		renderResult(w, r, http.StatusBadRequest, strToObjectError("Authenticate should be Post"))

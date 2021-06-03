@@ -17,8 +17,8 @@ package validator
 import (
 	"net/url"
 
-	"bookstore.app/model"
-	"bookstore.app/storage"
+	"bookstore/model"
+	"bookstore/storage"
 )
 
 // ValidateBookCreation validates user creation with a password.

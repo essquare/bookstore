@@ -15,8 +15,8 @@
 package validator
 
 import (
-	"bookstore.app/model"
-	"bookstore.app/storage"
+	"bookstore/model"
+	"bookstore/storage"
 )
 
 // ValidateUserCreationWithPassword validates user creation with a password.

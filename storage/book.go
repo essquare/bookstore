@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"bookstore.app/model"
+	"bookstore/model"
 )
 
 // BookQueryBuilder builds a SQL query to fetch entries.

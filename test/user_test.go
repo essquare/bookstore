@@ -19,12 +19,12 @@ import (
 	"net/http"
 	"testing"
 
-	"bookstore.app/model"
+	"bookstore/model"
 )
 
 func createUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
 	var m model.User
-	r := NewRequest(caller, fmt.Sprintf("/users"), http.MethodPost, *user, "User", contentType, contentType)
+	r := NewRequest(caller, "/users", http.MethodPost, *user, "User", contentType, contentType)
 	response := r.makeRequest(t)
 
 	checkResponseCode(t, response.Code, http.StatusCreated)
@@ -34,7 +34,6 @@ func createUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 	checkUser(t, *user, &m)
 
 	getUser(t, caller, user, contentType)
-
 }
 
 func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, change map[string]interface{}, contentType string) {
@@ -52,7 +51,6 @@ func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 	checkUser(t, *user, &m)
 
 	getUser(t, caller, user, contentType)
-
 }
 
 func deleteUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
@@ -87,7 +85,6 @@ func TestGeneralUserOperations(t *testing.T) {
 	contentTypes := []string{contentXML, contentJSON, contentAlternateXML}
 
 	for _, contentType := range contentTypes {
-
 		user := map[string]interface{}{
 			"username":  "testuser123",
 			"pseudonym": "Jack London",

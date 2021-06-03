@@ -22,8 +22,9 @@ import (
 	"github.com/elnormous/contenttype"
 	log "github.com/sirupsen/logrus"
 
-	"bookstore.app/auth"
-	"bookstore.app/storage"
+	"bookstore/auth"
+	"bookstore/storage"
+
 	"github.com/form3tech-oss/jwt-go"
 )
 
@@ -67,7 +68,6 @@ func (m *middleware) handleMediaTypes(next http.Handler) http.Handler {
 			log.Errorf("[Middleware][MediaTypes] Accept could not be parsed: %v", err)
 			http.Error(w, "Erronous Accept", http.StatusBadRequest)
 			return
-
 		}
 		log.Info("Accepted media type:", accepted.String(), "extension parameters:", extParameters)
 
@@ -79,7 +79,6 @@ func (m *middleware) handleMediaTypes(next http.Handler) http.Handler {
 	})
 }
 func (m *middleware) handleToken(next http.Handler) http.Handler {
-
 	return m.jwtMiddleware.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Context().Value("token")
 		claims, ok := token.(*jwt.Token).Claims.(jwt.MapClaims)

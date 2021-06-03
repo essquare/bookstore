@@ -1,4 +1,4 @@
-module bookstore.app
+module bookstore
 
 go 1.16
 

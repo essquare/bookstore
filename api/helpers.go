@@ -21,7 +21,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"bookstore.app/model"
+	"bookstore/model"
+
 	"github.com/elnormous/contenttype"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
