@@ -43,6 +43,11 @@ type lister interface {
 	List() []interface{}
 }
 
+type ListContainer interface {
+	List() []interface{}
+	InternalList() interface{}
+}
+
 // ContextKey represents a context key.
 type ContextKey int
 

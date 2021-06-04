@@ -75,9 +75,17 @@ func (r *requestStruct) unmarshal(t *testing.T, response *httptest.ResponseRecor
 	if len(response.Body.Bytes()) != 0 {
 		switch r.contentType {
 		case contentJSON:
-			err := json.Unmarshal(response.Body.Bytes(), &m)
-			if err != nil {
-				t.Fatalf("Problem unmarshaling request: %v\n", err)
+			if o, ok := m.(api.ListContainer); ok {
+				list := o.InternalList()
+				err := json.Unmarshal(response.Body.Bytes(), &list)
+				if err != nil {
+					t.Fatalf("Problem unmarshaling request: %v\n", err)
+				}
+			} else {
+				err := json.Unmarshal(response.Body.Bytes(), &m)
+				if err != nil {
+					t.Fatalf("Problem unmarshaling request: %v\n", err)
+				}
 			}
 		case contentXML, contentAlternateXML:
 			err := xml.Unmarshal(response.Body.Bytes(), &m)
@@ -85,9 +93,17 @@ func (r *requestStruct) unmarshal(t *testing.T, response *httptest.ResponseRecor
 				t.Fatalf("Problem unmarshaling request: %v\n", err)
 			}
 		default:
-			err := json.Unmarshal(response.Body.Bytes(), &m)
-			if err != nil {
-				t.Fatalf("Problem unmarshaling request: %v\n", err)
+			if o, ok := m.(api.ListContainer); ok {
+				list := o.InternalList()
+				err := json.Unmarshal(response.Body.Bytes(), &list)
+				if err != nil {
+					t.Fatalf("Problem unmarshaling request: %v\n", err)
+				}
+			} else {
+				err := json.Unmarshal(response.Body.Bytes(), &m)
+				if err != nil {
+					t.Fatalf("Problem unmarshaling request: %v\n", err)
+				}
 			}
 		}
 	}
@@ -202,6 +218,28 @@ func createDefaultAdmin(t *testing.T) map[string]interface{} {
 	return m
 }
 
+func createSimpleUser(t *testing.T, username, pseudonym string) map[string]interface{} {
+	user, err := store.CreateUser(&model.UserCreationRequest{
+		Username:  username,
+		Password:  "test123",
+		Pseudonym: pseudonym,
+		IsAdmin:   true,
+	})
+	if err != nil {
+		t.Fatalf("Problem creating user: %v\n", err)
+	}
+
+	var m map[string]interface{}
+	jsonUser, err := json.Marshal(user)
+	if err != nil {
+		t.Fatalf("Problem creating user: %v\n", err)
+	}
+	json.Unmarshal(jsonUser, &m)
+	m["password"] = "test123"
+	m["id"] = int64(m["id"].(float64))
+	return m
+}
+
 func getUserJWT(t *testing.T, user map[string]interface{}) string {
 	data := url.Values{}
 	data.Set("username", user["username"].(string))
@@ -257,6 +295,16 @@ func checkUser(t *testing.T, user map[string]interface{}, userResponse *model.Us
 
 	if userResponse.ID != user["id"].(int64) {
 		t.Fatalf("Expected id %d. Got %d\n", user["id"].(int64), userResponse.ID)
+	}
+}
+
+func checkBooks(t *testing.T, expectedBooks []map[string]interface{}, booksResponse *model.Books) {
+	if len(expectedBooks) != len(booksResponse.Books) {
+		t.Fatalf("Expected count of books %d. Got %d\n", len(expectedBooks), len(booksResponse.Books))
+	}
+
+	for idx, expectedBooks := range expectedBooks {
+		checkBook(t, expectedBooks, &booksResponse.Books[idx])
 	}
 }
 

@@ -79,6 +79,18 @@ func getBook(t *testing.T, caller map[string]interface{}, book *map[string]inter
 	checkBook(t, *book, &m)
 }
 
+func listUserBooks(t *testing.T, caller map[string]interface{}, expectedBooks []map[string]interface{}, contentType string) {
+	var m model.Books
+
+	r := NewRequest(caller, fmt.Sprintf("/users/%v/books", (caller)["id"]), http.MethodGet, nil, "Book", contentType, contentType)
+	response := r.makeRequest(t)
+	checkResponseCode(t, response.Code, http.StatusOK)
+
+	r.unmarshal(t, response, &m)
+
+	checkBooks(t, expectedBooks, &m)
+}
+
 func TestGeneralBookOperations(t *testing.T) {
 	resetDatabase(t)
 	admin := createDefaultAdmin(t)
@@ -111,3 +123,69 @@ func TestGeneralBookOperations(t *testing.T) {
 		deleteBook(t, admin, &book, contentType)
 	}
 }
+
+func TestListUserBooks(t *testing.T) {
+	resetDatabase(t)
+
+	admin := createDefaultAdmin(t)
+	millerUser := createSimpleUser(t, "millerUser", "Michael Miller")
+	brownUser := createSimpleUser(t, "brownUser", "Dan Brown")
+
+	theMillersB := map[string]interface{}{
+		"title":       "The Millers",
+		"description": "Today we meet the Millers",
+		"image_url":   "https://images.books/millers.jpg",
+		"user_id":     millerUser["id"],
+		"price":       int64(1995),
+	}
+
+	daVinciB := map[string]interface{}{
+		"title":       "Da Vinci Code",
+		"description": "Some spooky stuff",
+		"image_url":   "https://images.books/vinci.jpg",
+		"user_id":     brownUser["id"],
+		"price":       int64(995),
+	}
+
+	infernoB := map[string]interface{}{
+		"title":       "Inferno",
+		"description": "More about symbolic stuff",
+		"image_url":   "https://images.books/inferno.jpg",
+		"user_id":     brownUser["id"],
+		"price":       int64(2000),
+	}
+
+	allBooks := []map[string]interface{}{
+		theMillersB,
+		daVinciB,
+		infernoB,
+	}
+
+	for _, book := range allBooks {
+		createBook(t, admin, &book, contentJSON)
+	}
+
+	contentTypes := []string{contentJSON, contentXML, contentAlternateXML}
+
+	for _, contentType := range contentTypes {
+		listUserBooks(t, admin, nil, contentType)
+	}
+
+	for _, contentType := range contentTypes {
+		expectedResult := []map[string]interface{}{
+			theMillersB,
+		}
+		listUserBooks(t, millerUser, expectedResult, contentType)
+	}
+
+	for _, contentType := range contentTypes {
+		expectedResult := []map[string]interface{}{
+			infernoB,
+			daVinciB,
+		}
+		listUserBooks(t, brownUser, expectedResult, contentType)
+	}
+}
+
+
+

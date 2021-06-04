@@ -14,7 +14,9 @@
 
 package model
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+)
 
 const (
 	DefaultBookSorting          = "title"
@@ -32,23 +34,26 @@ type Book struct {
 	ImageURL    string   `json:"image_url" xml:"image_url"`
 }
 
-type books []Book
-
 // Books is a list of book
 type Books struct {
-	books
+	Books []Book   `json:"-" xml:"Book"`
 }
 
 // NewBooks returns new Books struct
 func NewBooks(books []Book) *Books {
-	return &Books{books: books}
+	return &Books{Books: books}
 }
-func (u Books) List() []interface{} {
-	b := make([]interface{}, len(u.books))
-	for i := range u.books {
-		b[i] = u.books[i]
+
+func (u *Books) List() []interface{} {
+	b := make([]interface{}, len(u.Books))
+	for i := range u.Books {
+		b[i] = u.Books[i]
 	}
 	return b
+}
+
+func (u *Books) InternalList() interface{} {
+	return &u.Books
 }
 
 // UserCreationRequest represents the request to create a user.
