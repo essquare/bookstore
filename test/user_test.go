@@ -36,6 +36,25 @@ func createUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 	getUser(t, caller, user, contentType)
 }
 
+func createUserWithError(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string, errorCode int64, errorString string) {
+	r := NewRequest(caller, "/users", http.MethodPost, *user, "User", contentType, contentType)
+	response := r.makeRequest(t)
+
+	checkResponseCode(t, response.Code, int(errorCode))
+
+	var expectedString string
+	switch contentType {
+	case contentJSON:
+		expectedString = getJSONError(errorString)
+	case contentXML, contentAlternateXML:
+		expectedString = getXMLError(errorString)
+	default:
+		expectedString = getJSONError(errorString)
+	}
+	if response.Body.String() != expectedString {
+		t.Fatalf("Error does not match. Expected %s - received %s\n", expectedString, response.Body.String())
+	}
+}
 func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, change map[string]interface{}, contentType string) {
 	var m model.User
 	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodPut, change, "User", contentType, contentType)
@@ -117,4 +136,68 @@ func TestGetAdminUser(t *testing.T) {
 	for _, contentType := range contentTypes {
 		getUser(t, admin, &admin, contentType)
 	}
+}
+
+func TestGeneralErrorCases(t *testing.T) {
+	resetDatabase(t)
+	admin := createDefaultAdmin(t)
+
+	user := map[string]interface{}{
+		"username":  "testuser123",
+		"pseudonym": "Jack London",
+		"password":  "test123",
+		"is_admin":  false,
+	}
+
+	createUser(t, admin, &user, contentJSON)
+	contentTypes := []string{contentXML, contentJSON, contentAlternateXML}
+
+	for _, contentType := range contentTypes {
+
+		duplicateUsernameUser := map[string]interface{}{
+			"username":  "testuser123",
+			"pseudonym": "Mark Twain",
+			"password":  "test123",
+			"is_admin":  false,
+		}
+
+		createUserWithError(t, admin, &duplicateUsernameUser, contentType, http.StatusBadRequest, "user_already_exists")
+
+		emptyUsernameUser := map[string]interface{}{
+			"username":  "",
+			"pseudonym": "Mark Twain",
+			"password":  "test123",
+			"is_admin":  false,
+		}
+
+		createUserWithError(t, admin, &emptyUsernameUser, contentType, http.StatusBadRequest, "user_mandatory_fields:username")
+
+		duplicatePseudonymUser := map[string]interface{}{
+			"username":  "testuser344",
+			"pseudonym": "Jack London",
+			"password":  "test123",
+			"is_admin":  false,
+		}
+
+		createUserWithError(t, admin, &duplicatePseudonymUser, contentType, http.StatusBadRequest, "user_already_exists")
+
+		emptyPseudonymUser := map[string]interface{}{
+			"username":  "testuser344",
+			"pseudonym": "",
+			"password":  "test123",
+			"is_admin":  false,
+		}
+
+		createUserWithError(t, admin, &emptyPseudonymUser, contentType, http.StatusBadRequest, "user_mandatory_fields:pseudonym")
+
+		shortPasswordUser := map[string]interface{}{
+			"username":  "testuser344",
+			"pseudonym": "Mark Twain",
+			"password":  "test",
+			"is_admin":  false,
+		}
+
+		createUserWithError(t, admin, &shortPasswordUser, contentType, http.StatusBadRequest, "password_min_length")
+	}
+
 }

@@ -332,3 +332,11 @@ func checkBook(t *testing.T, book map[string]interface{}, bookResponse *model.Bo
 		t.Fatalf("Expected id %d. Got %d\n", book["id"].(int64), bookResponse.ID)
 	}
 }
+
+func getXMLError(errMsg string) string {
+	return "<Error><error_message>" + errMsg + "</error_message></Error>"
+}
+
+func getJSONError(errMsg string) string {
+	return `{"error_message":"` + errMsg + `"}`
+}

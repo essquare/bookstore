@@ -33,6 +33,10 @@ func ValidateUserCreation(store *storage.Storage, request *model.UserCreationReq
 		return NewValidationError("user_already_exists")
 	}
 
+	if store.UserWithPseudonymExists(request.Pseudonym) {
+		return NewValidationError("user_already_exists")
+	}
+
 	if err := validatePassword(request.Password); err != nil {
 		return err
 	}

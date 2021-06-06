@@ -30,7 +30,8 @@ import (
 )
 
 type errorMsg struct {
-	ErrorMessage string `json:"error_message" xml:"error_message"`
+	XMLName      xml.Name `json:"-" xml:"Error"`
+	ErrorMessage string   `json:"error_message" xml:"error_message"`
 }
 
 const (

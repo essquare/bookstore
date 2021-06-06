@@ -243,6 +243,12 @@ func (s *Storage) UserExists(username string) bool {
 	return result
 }
 
+func (s *Storage) UserWithPseudonymExists(pseudonym string) bool {
+	var result bool
+	s.db.QueryRow(`SELECT true FROM users WHERE pseudonym=$1`, pseudonym).Scan(&result)
+	return result
+}
+
 // AnotherUserExists checks if another user exists with the given username.
 func (s *Storage) AnotherUserExists(userID int64, username string) bool {
 	var result bool

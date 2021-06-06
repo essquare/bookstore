@@ -17,6 +17,8 @@ The following endpoints are currently implemented:
 - [PUT] /users/{userID:[0-9]+}/books/{bookID:[0-9]+}
 - [DELETE] /users/{userID:[0-9]+}/books/{bookID:[0-9]+}
 
+The last two do not need any authentication:
+
 - [GET] /books - list all books
 - [GET] /books/{bookID:[0-9]+} - get information about a book
 
