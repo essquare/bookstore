@@ -16,6 +16,7 @@
 
 bookstore
 bookstore.sqlite
+coverage.out
 
 .idea/
 

@@ -17,7 +17,7 @@ clean:
 	@ rm -f $(APP)-* $(APP)
 
 test:
-	go test -cover -race -count=1 ./... -coverpkg="$(APP)/..."
+	go test -cover -race -count=1 ./... -coverpkg="$(APP)/..." -coverprofile=coverage.out
 
 lint:
 	@if [ ! -f ./bin/golangci-lint ]; then \
