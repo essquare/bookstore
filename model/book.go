@@ -24,10 +24,10 @@ const (
 )
 
 type Book struct {
-	XMLName     xml.Name `json:"-" xml:"Book"`
+	XMLName     xml.Name `json:"-" xml:"book"`
 	ID          int64    `json:"id" xml:"id,attr"`
-	UserID      int64    `json:"user_id"`
-	User        *User    `json:"user,omitempty"`
+	UserID      int64    `json:"user_id" xml:"user_id"`
+	User        *User    `json:"user,omitempty" xml:"user"`
 	Title       string   `json:"title" xml:"title"`
 	Description string   `json:"description" xml:"description"`
 	Price       int64    `json:"price" xml:"price"`
@@ -36,7 +36,8 @@ type Book struct {
 
 // Books is a list of book
 type Books struct {
-	Books []Book   `json:"-" xml:"Book"`
+	XMLName   xml.Name `json:"-" xml:"books"`
+	Books []Book   `json:"-" xml:"book"`
 }
 
 // NewBooks returns new Books struct
@@ -58,7 +59,7 @@ func (u *Books) InternalList() interface{} {
 
 // UserCreationRequest represents the request to create a user.
 type BookCreationRequest struct {
-	XMLName     xml.Name `json:"-" xml:"Book"`
+	XMLName     xml.Name `json:"-" xml:"book"`
 	Title       string   `json:"title" xml:"title"`
 	Description string   `json:"description" xml:"description"`
 	Price       int64    `json:"price" xml:"price"`
@@ -67,7 +68,7 @@ type BookCreationRequest struct {
 
 // UserModificationRequest represents the request to modify a user.
 type BookModificationRequest struct {
-	XMLName     xml.Name `json:"-" xml:"Book"`
+	XMLName     xml.Name `json:"-" xml:"book"`
 	Title       *string  `json:"title" xml:"title"`
 	Description *string  `json:"description" xml:"description"`
 	Price       *int64   `json:"price" xml:"price"`

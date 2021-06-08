@@ -24,7 +24,7 @@ import (
 
 func createUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
 	var m model.User
-	r := NewRequest(caller, "/users", http.MethodPost, *user, "User", contentType, contentType)
+	r := NewRequest(caller, "/users", http.MethodPost, *user, "user", contentType, contentType)
 	response := r.makeRequest(t)
 
 	checkResponseCode(t, response.Code, http.StatusCreated)
@@ -37,7 +37,7 @@ func createUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 }
 
 func createUserWithError(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string, errorCode int64, errorString string) {
-	r := NewRequest(caller, "/users", http.MethodPost, *user, "User", contentType, contentType)
+	r := NewRequest(caller, "/users", http.MethodPost, *user, "user", contentType, contentType)
 	response := r.makeRequest(t)
 
 	checkResponseCode(t, response.Code, int(errorCode))
@@ -57,7 +57,7 @@ func createUserWithError(t *testing.T, caller map[string]interface{}, user *map[
 }
 func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, change map[string]interface{}, contentType string) {
 	var m model.User
-	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodPut, change, "User", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodPut, change, "user", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusOK)
 
@@ -73,7 +73,7 @@ func updateUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 }
 
 func deleteUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
-	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodDelete, nil, "User", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodDelete, nil, "user", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusNoContent)
 
@@ -81,7 +81,7 @@ func deleteUser(t *testing.T, caller map[string]interface{}, user *map[string]in
 }
 
 func getNonExistentUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
-	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "User", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "user", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusNotFound)
 }
@@ -89,7 +89,7 @@ func getNonExistentUser(t *testing.T, caller map[string]interface{}, user *map[s
 func getUser(t *testing.T, caller map[string]interface{}, user *map[string]interface{}, contentType string) {
 	var m model.User
 
-	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "User", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%v", (*user)["id"]), http.MethodGet, nil, "user", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusOK)
 

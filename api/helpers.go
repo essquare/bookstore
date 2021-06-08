@@ -30,7 +30,7 @@ import (
 )
 
 type errorMsg struct {
-	XMLName      xml.Name `json:"-" xml:"Error"`
+	XMLName      xml.Name `json:"-" xml:"error"`
 	ErrorMessage string   `json:"error_message" xml:"error_message"`
 }
 
@@ -39,10 +39,6 @@ const (
 	AppicationXML   = "application/xml"
 	TextXML         = "text/xml"
 )
-
-type lister interface {
-	List() []interface{}
-}
 
 type ListContainer interface {
 	List() []interface{}
@@ -159,7 +155,7 @@ func renderResult(w http.ResponseWriter, r *http.Request, status int, object int
 
 	switch accept.Type + "/" + accept.Subtype {
 	case ApplicationJSON:
-		if o, ok := object.(lister); ok {
+		if o, ok := object.(ListContainer); ok {
 			render.JSON(w, status, o.List())
 		} else {
 			render.JSON(w, status, object)
@@ -173,7 +169,7 @@ func renderResult(w http.ResponseWriter, r *http.Request, status int, object int
 	}
 }
 
-func unmarshalRequestObject(w http.ResponseWriter, r *http.Request, object interface{}) error {
+func unmarshalRequestObject(_ http.ResponseWriter, r *http.Request, object interface{}) error {
 	contenttype, err := requestContentType(r)
 	if err != nil {
 		return err

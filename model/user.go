@@ -18,7 +18,7 @@ import "encoding/xml"
 
 // User represents a user in the system.
 type User struct {
-	XMLName   xml.Name `json:"-" xml:"User"`
+	XMLName   xml.Name `json:"-" xml:"user"`
 	ID        int64    `json:"id" xml:"id,attr"`
 	Username  string   `json:"username" xml:"username"`
 	Password  string   `json:"-" xml:"-"`
@@ -26,29 +26,32 @@ type User struct {
 	IsAdmin   bool     `json:"is_admin" xml:"is_admin"`
 }
 
-type users []User
-
 // Users represents a list of users.
 type Users struct {
-	users
+	XMLName   xml.Name `json:"-" xml:"users"`
+	Users []User   `json:"-" xml:"user"`
 }
 
-func (u Users) List() []interface{} {
-	b := make([]interface{}, len(u.users))
-	for i := range u.users {
-		b[i] = u.users[i]
+func (u *Users) List() []interface{} {
+	b := make([]interface{}, len(u.Users))
+	for i := range u.Users {
+		b[i] = u.Users[i]
 	}
 	return b
 }
 
+func (u *Users) InternalList() interface{} {
+	return &u.Users
+}
+
 // NewUsers returns new Users struct
 func NewUsers(users []User) *Users {
-	return &Users{users: users}
+	return &Users{Users: users}
 }
 
 // UserCreationRequest represents the request to create a user.
 type UserCreationRequest struct {
-	XMLName   xml.Name `json:"-" xml:"User"`
+	XMLName   xml.Name `json:"-" xml:"user"`
 	Username  string   `json:"username" xml:"username"`
 	Password  string   `json:"password" xml:"password"`
 	Pseudonym string   `json:"pseudonym" xml:"pseudonym"`
@@ -57,7 +60,7 @@ type UserCreationRequest struct {
 
 // UserModificationRequest represents the request to modify a user.
 type UserModificationRequest struct {
-	XMLName   xml.Name `json:"-" xml:"User"`
+	XMLName   xml.Name `json:"-" xml:"user"`
 	Username  *string  `json:"username" xml:"username"`
 	Password  *string  `json:"password" xml:"password"`
 	Pseudonym *string  `json:"pseudonym" xml:"pseudonym"`

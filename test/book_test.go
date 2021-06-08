@@ -24,7 +24,7 @@ import (
 
 func createBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
 	var m model.Book
-	r := NewRequest(caller, fmt.Sprintf("/users/%d/books", (*book)["user_id"]), http.MethodPost, *book, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%d/books", (*book)["user_id"]), http.MethodPost, *book, "book", contentType, contentType)
 	response := r.makeRequest(t)
 
 	checkResponseCode(t, response.Code, http.StatusCreated)
@@ -38,7 +38,7 @@ func createBook(t *testing.T, caller map[string]interface{}, book *map[string]in
 
 func updateBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, change map[string]interface{}, contentType string) {
 	var m model.Book
-	r := NewRequest(caller, fmt.Sprintf("/users/%d/books/%v", (*book)["user_id"], (*book)["id"]), http.MethodPut, change, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%d/books/%v", (*book)["user_id"], (*book)["id"]), http.MethodPut, change, "book", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusOK)
 
@@ -54,7 +54,7 @@ func updateBook(t *testing.T, caller map[string]interface{}, book *map[string]in
 }
 
 func deleteBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
-	r := NewRequest(caller, fmt.Sprintf("/users/%d/books/%v", (*book)["user_id"], (*book)["id"]), http.MethodDelete, nil, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%d/books/%v", (*book)["user_id"], (*book)["id"]), http.MethodDelete, nil, "book", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusNoContent)
 
@@ -62,7 +62,7 @@ func deleteBook(t *testing.T, caller map[string]interface{}, book *map[string]in
 }
 
 func getNonExistentBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
-	r := NewRequest(caller, fmt.Sprintf("/books/%v", (*book)["id"]), http.MethodGet, nil, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/books/%v", (*book)["id"]), http.MethodGet, nil, "book", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusNotFound)
 }
@@ -70,7 +70,7 @@ func getNonExistentBook(t *testing.T, caller map[string]interface{}, book *map[s
 func getBook(t *testing.T, caller map[string]interface{}, book *map[string]interface{}, contentType string) {
 	var m model.Book
 
-	r := NewRequest(caller, fmt.Sprintf("/books/%v", (*book)["id"]), http.MethodGet, nil, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/books/%v", (*book)["id"]), http.MethodGet, nil, "book", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusOK)
 
@@ -82,7 +82,7 @@ func getBook(t *testing.T, caller map[string]interface{}, book *map[string]inter
 func listUserBooks(t *testing.T, caller map[string]interface{}, expectedBooks []map[string]interface{}, contentType string) {
 	var m model.Books
 
-	r := NewRequest(caller, fmt.Sprintf("/users/%v/books", (caller)["id"]), http.MethodGet, nil, "Book", contentType, contentType)
+	r := NewRequest(caller, fmt.Sprintf("/users/%v/books", (caller)["id"]), http.MethodGet, nil, "book", contentType, contentType)
 	response := r.makeRequest(t)
 	checkResponseCode(t, response.Code, http.StatusOK)
 

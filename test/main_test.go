@@ -334,7 +334,7 @@ func checkBook(t *testing.T, book map[string]interface{}, bookResponse *model.Bo
 }
 
 func getXMLError(errMsg string) string {
-	return "<Error><error_message>" + errMsg + "</error_message></Error>"
+	return "<error><error_message>" + errMsg + "</error_message></error>"
 }
 
 func getJSONError(errMsg string) string {
