@@ -10,6 +10,12 @@ GOLANGCI_LINT_VERSION 	:= "v1.40.1"
 bookstore:
 	@ go build -ldflags=$(LD_FLAGS) -o $(APP) main.go
 
+migrate:
+	@ LOG_DATE_TIME=1 go run main.go -m
+
+create_admin:
+	@ LOG_DATE_TIME=1 go run main.go -create-admin=true -create-admin-username=${ADMIN_USERNAME} -create-admin-password=${ADMIN_PASSWORD}
+
 run:
 	@ LOG_DATE_TIME=1 go run main.go
 
